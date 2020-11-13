@@ -23,17 +23,22 @@ public class SelectPresetUI : UIStateBase
     private const float k_columnSpacing = 0.03f;
     private const float k_rowElementSize = (1.0f / k_elementsInRow) - k_columnSpacing;
     private const float k_columnElementSize = (1.0f / k_elementsInColumn) - k_rowSpacing;
+
     public const int k_elementsPerGrid = k_elementsInColumn * k_elementsInRow;
     public const string k_selectElementMsg = "selected_{0}";
 
     private Transform m_gridTransform = null;
     private Button m_removeButton = null;
+    private Button m_editButton = null;
+    private Button m_selectButton = null;
     private Button m_previousPage = null;
     private Button m_nextPage = null;
 
     void Start()
     {
         m_gridTransform = gameObject.FindChildByName("Grid").transform;
+        m_editButton = gameObject.GetComponentFromChild<Button>("Edit");
+        m_selectButton = gameObject.GetComponentFromChild<Button>("SelectPreset");
         m_removeButton = gameObject.GetComponentFromChild<Button>("Remove");
         m_previousPage = gameObject.GetComponentFromChild<Button>("PreviousPage");
         m_nextPage = gameObject.GetComponentFromChild<Button>("NextPage");
@@ -74,9 +79,11 @@ public class SelectPresetUI : UIStateBase
         }
     }
 
-    public void SetRemoveInteractablity(bool interactable)
+    public void SetNonPageButtonInteractablity(bool interactable)
     {
         m_removeButton.interactable = interactable;
+        m_selectButton.interactable = interactable;
+        m_editButton.interactable = interactable;
     }
 
     public void SetPageNavigatorInteractability(bool previousPageInteractable, bool nextPageInteractable)

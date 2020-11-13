@@ -3,6 +3,8 @@
 /////   James McNeil - 2020
 ////////////////////////////////////////////////////////////
 
+using System;
+
 namespace PersonalFramework
 {
     /// <summary>
@@ -14,7 +16,9 @@ namespace PersonalFramework
         private Status m_status = Status.START_PRESENTING;
         protected UIStateBase m_ui = null;
         private Observer m_messageObserver = new Observer();
+        private Action m_onDismissedAction = null;
 
+        public bool IsDismissed => m_status == Status.DISMISSED;
         protected StateController ControllingStateStack { get; private set; }
 
         public void SetStateController(StateController stateController)
@@ -163,6 +167,7 @@ namespace PersonalFramework
         public void EndDismissingState()
         {
             m_status = Status.DISMISSED;
+
             if (m_ui != null)
             {
                 m_ui.SetContentActiveStatus(false);
@@ -173,11 +178,9 @@ namespace PersonalFramework
                     objs[i].RemoveObserver(m_messageObserver);
                 }
             }
-        }
 
-        public bool IsDismissed()
-        {
-            return m_status == Status.DISMISSED;
+            m_onDismissedAction?.Invoke();
+            m_onDismissedAction = null;
         }
 
         protected void RebuildObserverList()
@@ -210,6 +213,16 @@ namespace PersonalFramework
 
         public virtual void EnteredBackground()
         {
+        }
+
+        public void AddOnStateDismissingAction(Action dismissingAction)
+        {
+            m_onDismissedAction += dismissingAction;
+        }
+
+        public void RemoveDismissingActions()
+        {
+            m_onDismissedAction = null;
         }
     }
 }

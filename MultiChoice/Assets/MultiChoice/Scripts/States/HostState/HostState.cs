@@ -41,11 +41,15 @@ public class HostState : FlowStateBase
                 break;
 
             case "selectPreset":
-                SelectPresetState selectState = new SelectPresetState(m_dataPresets);
+                SelectPresetState selectState = new SelectPresetState(m_dataPresets, SetSelectedID);
                 ControllingStateStack.PushState(selectState);
                 break;
 
             case "start":
+                break;
+
+            case "back":
+                ControllingStateStack.PopState(this);
                 break;
         }
     }
@@ -56,4 +60,9 @@ public class HostState : FlowStateBase
         m_hostUI.SetPresetSelectionEnabled(m_dataPresets.Count > 0);
         m_hostUI.SetStartOptionEnabled(!string.IsNullOrEmpty(m_selectedPresetKey));
     } 
+
+    private void SetSelectedID(string selectedKey)
+    {
+        m_selectedPresetKey = selectedKey;
+    }
 }

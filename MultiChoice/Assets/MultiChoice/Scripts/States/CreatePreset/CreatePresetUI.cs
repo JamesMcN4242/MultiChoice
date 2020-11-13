@@ -32,6 +32,13 @@ public class CreatePresetUI : UIStateBase
         m_presetName.onValueChanged.RemoveAllListeners();
     }
 
+    public void SetKeyAndContent(string key, string content)
+    {
+        m_presetName.text = key;
+        m_presetContent.text = content;
+    }
+
+
     public void SetNameValidated(bool valid)
     {
         if (valid)
@@ -48,6 +55,7 @@ public class CreatePresetUI : UIStateBase
             warningBlock.highlightedColor = red;
             warningBlock.normalColor = red;
             warningBlock.pressedColor = red;
+            warningBlock.colorMultiplier = 1.0f;
 
             m_presetName.colors = warningBlock;
         }

@@ -50,7 +50,7 @@ namespace PersonalFramework
                 FlowStateBase state = m_stateStack.Peek();
                 state.UpdateState();
 
-                if (state.IsDismissed())
+                if (state.IsDismissed)
                 {
                     m_stateStack.Pop();
                     SetNextState();
