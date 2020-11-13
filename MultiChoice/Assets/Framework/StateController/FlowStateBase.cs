@@ -14,7 +14,7 @@ namespace PersonalFramework
         private Status m_status = Status.START_PRESENTING;
         protected UIStateBase m_ui = null;
         private Observer m_messageObserver = new Observer();
-        
+
         protected StateController ControllingStateStack { get; private set; }
 
         public void SetStateController(StateController stateController)
@@ -52,7 +52,7 @@ namespace PersonalFramework
             }
 
             object[] messages = m_messageObserver.ConsumeMessages();
-            for(int i = 0; i < messages.Length; i++)
+            for (int i = 0; i < messages.Length; i++)
             {
                 HandleMessage(messages[i]);
             }
@@ -201,6 +201,14 @@ namespace PersonalFramework
         }
 
         protected virtual void FixedDismissingState()
+        {
+        }
+
+        public virtual void ReenteredForeground()
+        {
+        }
+
+        public virtual void EnteredBackground()
         {
         }
     }
