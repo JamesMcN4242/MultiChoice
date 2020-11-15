@@ -38,7 +38,6 @@ public class CreatePresetUI : UIStateBase
         m_presetContent.text = content;
     }
 
-
     public void SetNameValidated(bool valid)
     {
         if (valid)

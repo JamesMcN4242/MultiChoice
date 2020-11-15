@@ -23,9 +23,7 @@ public class MenuState : FlowStateBase
                 break;
 
             case "join":
-                break;
-
-            case "settings":
+                ControllingStateStack.PushState(new JoinState());
                 break;
         }
     }

@@ -46,6 +46,7 @@ public class HostState : FlowStateBase
                 break;
 
             case "start":
+                new NetworkManager(true);
                 break;
 
             case "back":
