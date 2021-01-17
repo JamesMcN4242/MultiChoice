@@ -12,7 +12,7 @@ public class JoinState : FlowStateBase
 
     protected override void UpdateActiveState()
     {
-        bool allFieldsFilled = m_joinUI.DoAllFieldContainText();
+        bool allFieldsFilled = m_joinUI.DoAllFieldsContainText();
         m_joinUI.SetStartButtonInteractive(allFieldsFilled);
     }
 

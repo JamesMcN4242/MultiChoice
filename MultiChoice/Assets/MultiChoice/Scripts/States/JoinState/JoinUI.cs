@@ -31,7 +31,7 @@ public class JoinUI : UIStateBase
         m_startButton.interactable = interactive;
     }
 
-    public bool DoAllFieldContainText()
+    public bool DoAllFieldsContainText()
     {
         foreach(TMP_InputField input in m_inputFields)
         {
