@@ -25,6 +25,10 @@ public class MenuState : FlowStateBase
             case "join":
                 ControllingStateStack.PushState(new JoinState());
                 break;
+
+            case "exit":
+                Application.Quit();
+                break;
         }
     }
 }
