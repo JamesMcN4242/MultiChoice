@@ -3,18 +3,31 @@
 /////   James McNeil - 2020
 ////////////////////////////////////////////////////////////
 
-using System;
-using System.Net;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
-using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
 
 using static UnityEngine.Debug;
 
 public class HostConnection : NetworkConnection
-{    
+{
+    private readonly object k_listLock = new object();
+    private List<TcpClient> m_clients = new List<TcpClient>(5);
+    private List<NetworkStream> m_networkStreams = new List<NetworkStream>(5);
+
     public HostConnection()
     {
         StartHosting();
+    }
+
+    ~HostConnection()
+    {
+        for(int i = 0; i < m_clients.Count; i++)
+        {
+            m_networkStreams[i]?.Close();
+            m_clients[i]?.Close();
+        }
     }
 
     public override NetworkType GetNetworkType()
@@ -22,58 +35,86 @@ public class HostConnection : NetworkConnection
         return NetworkType.HOST;
     }
 
-    private void StartHosting()
+    public override void SendData(object data)
     {
-        string[] code =  IPCodingSystem.CalculateConnectionCode();
-        IPAddress ipAddress = IPAddress.Parse(IPCodingSystem.GetIPFromCode(code));
-        //StartServer(ipAddress);
+        BinaryFormatter bf = new BinaryFormatter();
+        MemoryStream memoryStream = new MemoryStream();
+        bf.Serialize(memoryStream, data);
+        byte[] bytes = memoryStream.ToArray();
+
+        lock (k_listLock)
+        {
+            for (int i = 0; i < m_networkStreams.Count; i++)
+            {
+                m_networkStreams[i].Write(bytes, 0, bytes.Length);
+            }
+        }
     }
 
-    private static void StartServer(IPAddress hostAddress)
+    public override object UpdateConnection()
     {
-        IPEndPoint localEndPoint = new IPEndPoint(hostAddress, 11000);
+        List<(int bytes, byte[] data)> returnData = new List<(int bytes, byte[] data)>(m_networkStreams.Count);
 
-        try
+        lock(k_listLock)
         {
-            // Create a Socket that will use Tcp protocol      
-            Socket listener = new Socket(hostAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            // A Socket must be associated with an endpoint using the Bind method  
-            listener.Bind(localEndPoint);
-            // Specify how many requests a Socket can listen before it gives Server busy response.  
-            // We will listen 10 requests at a time  
-            listener.Listen(10);
-
-            Log("Waiting for a connection...");
-            Socket handler = listener.Accept();
-
-            // Incoming data from the client.    
-            string data = null;
-            byte[] bytes = null;
-
-            while (true)
+            for (int i = 0; i < m_networkStreams.Count; i++)
             {
-                bytes = new byte[1024];
-                int bytesRec = handler.Receive(bytes);
-                data += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-                if (data.IndexOf("<EOF>") > -1)
+                if (m_networkStreams[i].DataAvailable)
                 {
-                    break;
+                    byte[] data = new byte[256];
+                    int bytes = m_networkStreams[i].Read(data, 0, data.Length);
+                    return (bytes, data);
                 }
             }
-
-            Log("Text received : " + data);
-
-            byte[] msg = Encoding.ASCII.GetBytes(data);
-            handler.Send(msg);
-            handler.Shutdown(SocketShutdown.Both);
-            handler.Close();
         }
-        catch (Exception e)
+
+        if(returnData.Count > 0)
         {
-            Log(e.ToString());
+            return returnData;
         }
 
-        Log("\n Press any key to continue...");
-        Console.ReadKey();
+        return false;
+    }
+
+    private void StartHosting()
+    {
+        m_backgroundThread = new System.Threading.Thread(StartServer);
+        m_backgroundThread.IsBackground = true;
+        m_backgroundThread.Start();
+    }
+
+    private void StartServer()
+    {
+        TcpListener server = null;
+        try
+        {
+            server = new TcpListener(IPCodingSystem.GetLocalIPAddress(), k_serverPort);
+            server.Start();
+
+            // Enter the listening loop.
+            while (true)
+            {
+                Log("Waiting for a connection... ");
+                TcpClient client = server.AcceptTcpClient();
+
+                Log("New client connected!");
+                NetworkStream stream = client.GetStream();
+
+                lock(k_listLock)
+                {
+                    m_clients.Add(client);
+                    m_networkStreams.Add(stream);
+                }
+            }
+        }
+        catch (SocketException e)
+        {
+            LogFormat("SocketException: {0}", e);
+        }
+        finally
+        {
+            // Stop listening for new clients.
+            server.Stop();
+        }
     }
 }

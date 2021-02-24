@@ -16,10 +16,12 @@ public class ConnectedUI : UIStateBase
 
     private Transform m_gridTransform = null;
     private Image[] m_elementImages = null;
+    private TextMeshProUGUI m_codeText = null;
 
     private void Start()
     {
         m_gridTransform = gameObject.FindChildByName("Grid").transform;
+        m_codeText = gameObject.GetComponentFromChild<TextMeshProUGUI>("ConnectionCode");
     }
 
     //TODO: Just a make a generic grid UI element that can be attached instead of copying this over from other sections
@@ -61,5 +63,10 @@ public class ConnectedUI : UIStateBase
     public void SetElementColour(int elementIndex, Color color)
     {
         m_elementImages[elementIndex].color = color;
+    }
+
+    public void SetConnectionCode(string[] code)
+    {
+        m_codeText.text = string.Join(" ", code);
     }
 }

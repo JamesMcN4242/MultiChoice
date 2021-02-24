@@ -7,15 +7,25 @@ public class NetworkManager
 {
     private NetworkConnection m_networkController = null;
 
-    public NetworkManager(bool isHost)
+    public NetworkManager(string serverIP = null)
     {
-        if(isHost)
+        if(serverIP == null)
         {
             m_networkController = new HostConnection();
         }
         else
         {
-            m_networkController = new ClientConnection();
+            m_networkController = new ClientConnection(serverIP);
         }
+    }
+
+    public void SendMessage(object msg)
+    {
+        m_networkController.SendData(msg);
+    }
+
+    public object UpdateNetwork()
+    {
+        return m_networkController.UpdateConnection();
     }
 }

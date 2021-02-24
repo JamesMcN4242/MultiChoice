@@ -10,50 +10,38 @@ public class ConnectedState : FlowStateBase
     private ConnectedUI m_connectedUI = null;
     private NetworkManager m_networkManager = null;
     private List<string> m_options = null;
+    private string[] m_networkCode = null;
 
     private bool m_selecting = false;
     private float m_timeSelecting = 0.0f;
     private float m_lastHighlightSpot = -1.0f;
     private int m_selectedIndex = 0;
 
-    public ConnectedState(NetworkManager networkManager, List<string> options)
+    public ConnectedState(NetworkManager networkManager, List<string> options, string[] code)
     {
         m_networkManager = networkManager;
         m_options = options;
+        m_networkCode = code;
     }
 
     protected override void StartPresentingState()
     {
         m_connectedUI.BuildGridElements(m_options, 0);
+        m_connectedUI.SetConnectionCode(m_networkCode);
     }
 
     protected override void UpdateActiveState()
     {
-        if(m_selecting)
+        UpdateSelecting();
+        object data = m_networkManager.UpdateNetwork();
+        if(!(data is bool))
         {
-            m_timeSelecting += Time.deltaTime;
-
-            if(m_timeSelecting >= k_timeBeforeReveal)
+            Debug.Log("Received some form of message!");
+            switch(data)
             {
-                m_timeSelecting = 0.0f;
-                m_selecting = false;
-                m_lastHighlightSpot = -1.0f;
-
-                m_connectedUI.SetElementColour(m_selectedIndex, Color.green);
-            }
-            else if (m_timeSelecting - m_lastHighlightSpot > k_minTimeBeforeNewHighlight + Random.Range(0.0f, 0.3f))
-            {
-                m_connectedUI.SetElementColour(m_selectedIndex, Color.white);
-
-                int newIndex;
-                do
-                {
-                    newIndex = Random.Range(0, Mathf.Min(m_options.Count, ConnectedUI.k_elementsPerGrid));
-                } while (newIndex == m_selectedIndex && m_options.Count > 1);
-
-                m_selectedIndex = newIndex;
-                m_connectedUI.SetElementColour(m_selectedIndex, Color.yellow);
-                m_lastHighlightSpot = m_timeSelecting;
+                case List<object> dataList:
+                    Debug.Log($"Got a list of {dataList.Count} length");
+                    break;
             }
         }
     }
@@ -77,5 +65,36 @@ public class ConnectedState : FlowStateBase
         m_connectedUI = Object.FindObjectOfType<ConnectedUI>();
         m_ui = m_connectedUI;
         return m_ui != null;
+    }
+
+    private void UpdateSelecting()
+    {
+        if (m_selecting)
+        {
+            m_timeSelecting += Time.deltaTime;
+
+            if (m_timeSelecting >= k_timeBeforeReveal)
+            {
+                m_timeSelecting = 0.0f;
+                m_selecting = false;
+                m_lastHighlightSpot = -1.0f;
+
+                m_connectedUI.SetElementColour(m_selectedIndex, Color.green);
+            }
+            else if (m_timeSelecting - m_lastHighlightSpot > k_minTimeBeforeNewHighlight + Random.Range(0.0f, 0.3f))
+            {
+                m_connectedUI.SetElementColour(m_selectedIndex, Color.white);
+
+                int newIndex;
+                do
+                {
+                    newIndex = Random.Range(0, Mathf.Min(m_options.Count, ConnectedUI.k_elementsPerGrid));
+                } while (newIndex == m_selectedIndex && m_options.Count > 1);
+
+                m_selectedIndex = newIndex;
+                m_connectedUI.SetElementColour(m_selectedIndex, Color.yellow);
+                m_lastHighlightSpot = m_timeSelecting;
+            }
+        }
     }
 }

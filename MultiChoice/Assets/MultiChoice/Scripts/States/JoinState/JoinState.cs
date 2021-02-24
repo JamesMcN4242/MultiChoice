@@ -3,6 +3,7 @@
 /////   James McNeil - 2020
 ////////////////////////////////////////////////////////////
 
+using System.Collections.Generic;
 using PersonalFramework;
 using UnityEngine;
 
@@ -31,10 +32,13 @@ public class JoinState : FlowStateBase
                 ControllingStateStack.PopState(this);
                 break;
 
-            case "start":
+            case "join":
                 string[] connections = m_joinUI.GetCodeInput();
                 string ip = IPCodingSystem.GetIPFromCode(connections);
-                Debug.Log(ip);
+                NetworkManager networkManager = new NetworkManager(ip);
+                networkManager.SendMessage("Oh hello there");
+                ConnectedState connectedState = new ConnectedState(networkManager, new List<string>(), connections);
+                ControllingStateStack.PushState(connectedState);
                 break;
         }
     }
