@@ -32,11 +32,6 @@ public class HostConnectedState : FlowStateBase
         m_networkManager.OnNewConnection = () => m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.CONTENT_OPTIONS, m_content = m_options });
     }
 
-    ~HostConnectedState()
-    {
-        m_connectedUI.ClearGridElements();
-    }
-
     protected override void StartPresentingState()
     {
         m_connectedUI.SetSelectionButtonEnabled(true);

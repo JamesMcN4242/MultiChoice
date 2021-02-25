@@ -27,15 +27,11 @@ public class ClientConnectedState : FlowStateBase
         m_networkCode = code;
     }
 
-    ~ClientConnectedState()
-    {
-        m_connectedUI.ClearGridElements();
-    }
-
     protected override void StartPresentingState()
     {
         m_connectedUI.SetSelectionButtonEnabled(false);
         m_connectedUI.SetConnectionCode(m_networkCode);
+        m_connectedUI.ClearGridElements();
     }
 
     protected override void UpdateActiveState()
