@@ -9,7 +9,8 @@ public enum MessageType : byte
     CONTENT_OPTIONS,
     SELECTION,
     FINAL_SELECTION,
-    LEFT_LOBBY
+    LEFT_LOBBY,
+    EDIT_LIST
 }
 
 [System.Serializable]

@@ -21,6 +21,7 @@ public class HostConnection : NetworkConnection
     private int m_currentClients = 0;
 
     public Action OnNewConnection { set; private get; }
+    public int CurrentClients => m_currentClients;
 
     public HostConnection()
     {
@@ -34,11 +35,27 @@ public class HostConnection : NetworkConnection
 
     public override void SendData(object data)
     {
-        byte[] bytes = ConvertToByteArray(data);
+        SendData(data, 0, m_clients.Count);
+    }
 
+    public void SendData(object data, int startIndex, int endIndex)
+    {
+        byte[] bytes = ConvertToByteArray(data);
+        SendData(bytes, startIndex, endIndex);
+    }
+
+    public void SendData(object data, int excludingIndex)
+    {
+        byte[] bytes = ConvertToByteArray(data);
+        SendData(bytes, 0, excludingIndex);
+        SendData(bytes, excludingIndex + 1, m_clients.Count);
+    }
+
+    public void SendData(byte[] bytes, int startIndex, int endIndex)
+    {
         lock (k_listLock)
         {
-            for (int i = 0; i < m_networkStreams.Count; i++)
+            for (int i = startIndex; i < endIndex; i++)
             {
                 try
                 {
@@ -60,11 +77,11 @@ public class HostConnection : NetworkConnection
         {
             if (m_currentClients < m_clients.Count)
             {
-                OnNewConnection?.Invoke();
                 m_currentClients = m_clients.Count;
+                OnNewConnection?.Invoke();
             }
 
-            List<NetworkPacket> messages = CollectAndProcessNetworkMessages();
+            List<(int, NetworkPacket)> messages = CollectAndProcessNetworkMessages();
             if (messages.Count > 0)
             {
                 return messages;
@@ -131,9 +148,9 @@ public class HostConnection : NetworkConnection
         }
     }
 
-    private List<NetworkPacket> CollectAndProcessNetworkMessages()
+    private List<(int, NetworkPacket)> CollectAndProcessNetworkMessages()
     {
-        List<NetworkPacket> messages = new List<NetworkPacket>(m_networkStreams.Count);
+        List<(int, NetworkPacket)> messages = new List<(int, NetworkPacket)>(m_networkStreams.Count);
 
         for (int i = 0; i < m_networkStreams.Count; i++)
         {
@@ -148,7 +165,7 @@ public class HostConnection : NetworkConnection
                 }
                 else
                 {
-                    messages.Add(packet);
+                    messages.Add((i, packet));
                 }
             }
         }

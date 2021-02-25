@@ -64,6 +64,11 @@ public class ClientConnectedState : FlowStateBase
                     m_selectedIndex = (int)packet.m_content;
                     m_connectedUI.SetElementColour(m_selectedIndex, Color.green);
                     break;
+
+                case MessageType.EDIT_LIST:
+                    m_options = (List<string>)packet.m_content;
+                    m_connectedUI.BuildGridElements(m_options, 0);
+                    break;
             }
         }
     }
@@ -72,6 +77,17 @@ public class ClientConnectedState : FlowStateBase
     {
         switch(message)
         {
+            case "edit":
+                EditActivePresetState editState = new EditActivePresetState(string.Join(", ", m_options), (string editedContent) =>
+                {
+                    string[] contentArr = editedContent.Replace(", ", ",").Split(',');
+                    m_options = new List<string>(contentArr);
+                    m_connectedUI.BuildGridElements(m_options, 0);
+                    m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.EDIT_LIST, m_content = m_options });
+                });
+                ControllingStateStack.PushState(editState);
+                break;
+
             case "back":
                 m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.LEFT_LOBBY, m_content = null });
                 ControllingStateStack.PopState(this);

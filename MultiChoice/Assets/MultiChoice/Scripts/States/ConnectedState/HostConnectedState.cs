@@ -29,7 +29,11 @@ public class HostConnectedState : FlowStateBase
         m_options = options;
         m_networkCode = code;
 
-        m_networkManager.OnNewConnection = () => m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.CONTENT_OPTIONS, m_content = m_options });
+        m_networkManager.OnNewConnection = () =>
+        {
+            NetworkPacket packet = new NetworkPacket() { m_messageType = MessageType.CONTENT_OPTIONS, m_content = m_options };
+            m_networkManager.SendData(packet, m_networkManager.CurrentClients -1, m_networkManager.CurrentClients);
+        };
     }
 
     protected override void StartPresentingState()
@@ -47,11 +51,22 @@ public class HostConnectedState : FlowStateBase
         if(!(data is bool))
         {
             Debug.Log("Received some form of message!");
-            switch(data)
+            List<(int, NetworkPacket)> messages = (List<(int, NetworkPacket)>)data;
+
+            for(int i = 0; i < messages.Count; i++)
             {
-                case List<object> dataList:
-                    Debug.Log($"Got a list of {dataList.Count} length");
-                    break;
+                NetworkPacket packet = messages[i].Item2;
+
+                //Relay information to every other connection than the sender
+                m_networkManager.SendData(packet, messages[i].Item1);
+                
+                switch(packet.m_messageType)
+                {
+                    case MessageType.EDIT_LIST:
+                        m_options = (List<string>)packet.m_content;
+                        m_connectedUI.BuildGridElements(m_options, 0);
+                        break;
+                }
             }
         }
     }
@@ -63,6 +78,17 @@ public class HostConnectedState : FlowStateBase
             case "select":
                 m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.SELECTION, m_content = null });
                 m_selecting = true;
+                break;
+
+            case "edit":
+                EditActivePresetState editState = new EditActivePresetState(string.Join(", ", m_options), (string editedContent) =>
+                {
+                    string[] contentArr = editedContent.Replace(", ", ",").Split(',');
+                    m_options = new List<string>(contentArr);
+                    m_connectedUI.BuildGridElements(m_options, 0);
+                    m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.EDIT_LIST, m_content = m_options });
+                });
+                ControllingStateStack.PushState(editState);
                 break;
 
             case "back":

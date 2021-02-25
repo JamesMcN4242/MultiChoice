@@ -69,7 +69,11 @@ public class ConnectedUI : UIStateBase
 
     public void SetElementColour(int elementIndex, Color color)
     {
-        m_elementImages[elementIndex].color = color;
+        //Needs to carefully protect this for run time race conditions where a user on the network may change the list
+        if (m_elementImages.Length > elementIndex)
+        {
+            m_elementImages[elementIndex].color = color;
+        }
     }
 
     public void SetConnectionCode(string[] code)
