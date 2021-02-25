@@ -1,8 +1,14 @@
-﻿using PersonalFramework;
+﻿////////////////////////////////////////////////////////////
+/////   HostConnectedState.cs
+/////   James McNeil - 2021
+////////////////////////////////////////////////////////////
+
+
+using PersonalFramework;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ConnectedState : FlowStateBase
+public class HostConnectedState : FlowStateBase
 {
     private const float k_timeBeforeReveal = 2.0f;
     private const float k_minTimeBeforeNewHighlight = 0.15f;
@@ -17,11 +23,18 @@ public class ConnectedState : FlowStateBase
     private float m_lastHighlightSpot = -1.0f;
     private int m_selectedIndex = 0;
 
-    public ConnectedState(NetworkManager networkManager, List<string> options, string[] code)
+    public HostConnectedState(NetworkManager networkManager, List<string> options, string[] code)
     {
         m_networkManager = networkManager;
         m_options = options;
         m_networkCode = code;
+
+        m_networkManager.GetHostConnection.OnNewConnection = () => m_networkManager.SendMessage(new NetworkPacket() { m_messageType = MessageType.CONTENT_OPTIONS, m_content = m_options });
+    }
+
+    ~HostConnectedState()
+    {
+        m_connectedUI.ClearGridElements();
     }
 
     protected override void StartPresentingState()
@@ -33,6 +46,7 @@ public class ConnectedState : FlowStateBase
     protected override void UpdateActiveState()
     {
         UpdateSelecting();
+
         object data = m_networkManager.UpdateNetwork();
         if(!(data is bool))
         {
@@ -51,6 +65,7 @@ public class ConnectedState : FlowStateBase
         switch(message)
         {
             case "select":
+                m_networkManager.SendMessage(new NetworkPacket() { m_messageType = MessageType.SELECTION, m_content = null });
                 m_selecting = true;
                 break;
 
@@ -65,6 +80,11 @@ public class ConnectedState : FlowStateBase
         m_connectedUI = Object.FindObjectOfType<ConnectedUI>();
         m_ui = m_connectedUI;
         return m_ui != null;
+    }
+
+    protected override void StartDismissingState()
+    {
+        m_networkManager.GetHostConnection.OnNewConnection = null;
     }
 
     private void UpdateSelecting()

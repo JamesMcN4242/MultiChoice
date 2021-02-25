@@ -3,6 +3,7 @@
 /////   James McNeil - 2020
 ////////////////////////////////////////////////////////////
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
@@ -15,6 +16,10 @@ public class HostConnection : NetworkConnection
     private readonly object k_listLock = new object();
     private List<TcpClient> m_clients = new List<TcpClient>(5);
     private List<NetworkStream> m_networkStreams = new List<NetworkStream>(5);
+
+    private int m_currentClients = 0;
+
+    public Action OnNewConnection { set; private get; }
 
     public HostConnection()
     {
@@ -53,24 +58,30 @@ public class HostConnection : NetworkConnection
 
     public override object UpdateConnection()
     {
-        List<(int bytes, byte[] data)> returnData = new List<(int bytes, byte[] data)>(m_networkStreams.Count);
-
         lock(k_listLock)
         {
+            if (m_currentClients < m_clients.Count)
+            {
+                OnNewConnection?.Invoke();
+                m_currentClients = m_clients.Count;
+            }
+
+            List<(int bytes, byte[] data)> returnData = new List<(int bytes, byte[] data)>(m_networkStreams.Count);
+
             for (int i = 0; i < m_networkStreams.Count; i++)
             {
                 if (m_networkStreams[i].DataAvailable)
                 {
                     byte[] data = new byte[256];
                     int bytes = m_networkStreams[i].Read(data, 0, data.Length);
-                    return (bytes, data);
+                    returnData.Add((bytes, data));
                 }
             }
-        }
 
-        if(returnData.Count > 0)
-        {
-            return returnData;
+            if (returnData.Count > 0)
+            {
+                return returnData;
+            }
         }
 
         return false;

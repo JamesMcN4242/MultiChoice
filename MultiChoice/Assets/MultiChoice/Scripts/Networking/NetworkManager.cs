@@ -7,6 +7,8 @@ public class NetworkManager
 {
     private NetworkConnection m_networkController = null;
 
+    public HostConnection GetHostConnection => m_networkController as HostConnection;
+
     public NetworkManager(string serverIP = null)
     {
         if(serverIP == null)

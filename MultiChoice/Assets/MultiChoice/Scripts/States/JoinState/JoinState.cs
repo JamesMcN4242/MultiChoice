@@ -33,11 +33,11 @@ public class JoinState : FlowStateBase
                 break;
 
             case "join":
-                string[] connections = m_joinUI.GetCodeInput();
-                string ip = IPCodingSystem.GetIPFromCode(connections);
+                string[] connectionCode = m_joinUI.GetCodeInput();
+                string ip = IPCodingSystem.GetIPFromCode(connectionCode);
                 NetworkManager networkManager = new NetworkManager(ip);
-                networkManager.SendMessage("Oh hello there");
-                ConnectedState connectedState = new ConnectedState(networkManager, new List<string>(), connections);
+
+                ClientConnectedState connectedState = new ClientConnectedState(networkManager, connectionCode);
                 ControllingStateStack.PushState(connectedState);
                 break;
         }

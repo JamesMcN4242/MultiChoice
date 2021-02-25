@@ -27,7 +27,6 @@ public class ConnectedUI : UIStateBase
     //TODO: Just a make a generic grid UI element that can be attached instead of copying this over from other sections
     public void BuildGridElements(List<string> gridElements, int pageNumber)
     {
-        m_gridTransform.DestroyAllChildren();
         m_elementImages = new Image[gridElements.Count];
         if (gridElements == null || gridElements.Count == 0) return;
 
@@ -58,6 +57,11 @@ public class ConnectedUI : UIStateBase
             }
             yMaxAnchor -= k_columnElementSize + k_columnSpacing;
         }
+    }
+
+    public void ClearGridElements()
+    {
+        m_gridTransform.DestroyAllChildren();
     }
 
     public void SetElementColour(int elementIndex, Color color)

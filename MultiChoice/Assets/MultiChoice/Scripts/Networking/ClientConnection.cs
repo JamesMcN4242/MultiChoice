@@ -37,9 +37,14 @@ public class ClientConnection : NetworkConnection
         {
             if(m_networkStream.DataAvailable)
             {
-                byte[] data = new Byte[256];
+                byte[] data = new Byte[1024];
                 int bytes = m_networkStream.Read(data, 0, data.Length);
-                return (bytes, data);
+
+                MemoryStream memStream = new MemoryStream();
+                BinaryFormatter binForm = new BinaryFormatter();
+                memStream.Write(data, 0, bytes);
+                memStream.Seek(0, SeekOrigin.Begin);
+                return (NetworkPacket)binForm.Deserialize(memStream);
             }
         }
 
