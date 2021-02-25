@@ -8,6 +8,7 @@ public enum MessageType : byte
 {
     CONTENT_OPTIONS,
     SELECTION,
+    FINAL_SELECTION,
     LEFT_LOBBY
 }
 

@@ -17,16 +17,19 @@ public class ConnectedUI : UIStateBase
     private Transform m_gridTransform = null;
     private Image[] m_elementImages = null;
     private TextMeshProUGUI m_codeText = null;
+    private GameObject m_selectButton = null;
 
     private void Start()
     {
         m_gridTransform = gameObject.FindChildByName("Grid").transform;
         m_codeText = gameObject.GetComponentFromChild<TextMeshProUGUI>("ConnectionCode");
+        m_selectButton = transform.Find("Content/Select").gameObject;
     }
 
     //TODO: Just a make a generic grid UI element that can be attached instead of copying this over from other sections
     public void BuildGridElements(List<string> gridElements, int pageNumber)
     {
+        ClearGridElements();
         m_elementImages = new Image[gridElements.Count];
         if (gridElements == null || gridElements.Count == 0) return;
 
@@ -72,5 +75,10 @@ public class ConnectedUI : UIStateBase
     public void SetConnectionCode(string[] code)
     {
         m_codeText.text = string.Join(" ", code);
+    }
+
+    public void SetSelectionButtonEnabled(bool enabled)
+    {
+        m_selectButton.SetActive(enabled);
     }
 }

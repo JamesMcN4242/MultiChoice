@@ -9,7 +9,6 @@ using UnityEngine;
 
 public class ClientConnectedState : FlowStateBase
 {
-    private const float k_timeBeforeReveal = 2.0f;
     private const float k_minTimeBeforeNewHighlight = 0.15f;
 
     private ConnectedUI m_connectedUI = null;
@@ -35,6 +34,7 @@ public class ClientConnectedState : FlowStateBase
 
     protected override void StartPresentingState()
     {
+        m_connectedUI.SetSelectionButtonEnabled(false);
         m_connectedUI.SetConnectionCode(m_networkCode);
     }
 
@@ -56,8 +56,17 @@ public class ClientConnectedState : FlowStateBase
                     break;
 
                 case MessageType.SELECTION:
-                    //TODO: Decide on the same final target
                     m_selecting = true;
+                    break;
+
+                case MessageType.FINAL_SELECTION:
+                    m_timeSelecting = 0.0f;
+                    m_selecting = false;
+                    m_lastHighlightSpot = -1.0f;
+                    m_connectedUI.SetElementColour(m_selectedIndex, Color.white);
+
+                    m_selectedIndex = (int)packet.m_content;
+                    m_connectedUI.SetElementColour(m_selectedIndex, Color.green);
                     break;
             }
         }
@@ -91,16 +100,8 @@ public class ClientConnectedState : FlowStateBase
         if (m_selecting)
         {
             m_timeSelecting += Time.deltaTime;
-
-            if (m_timeSelecting >= k_timeBeforeReveal)
-            {
-                m_timeSelecting = 0.0f;
-                m_selecting = false;
-                m_lastHighlightSpot = -1.0f;
-
-                m_connectedUI.SetElementColour(m_selectedIndex, Color.green);
-            }
-            else if (m_timeSelecting - m_lastHighlightSpot > k_minTimeBeforeNewHighlight + Random.Range(0.0f, 0.3f))
+            
+            if (m_timeSelecting - m_lastHighlightSpot > k_minTimeBeforeNewHighlight + Random.Range(0.0f, 0.3f))
             {
                 m_connectedUI.SetElementColour(m_selectedIndex, Color.white);
 

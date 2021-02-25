@@ -39,6 +39,7 @@ public class HostConnectedState : FlowStateBase
 
     protected override void StartPresentingState()
     {
+        m_connectedUI.SetSelectionButtonEnabled(true);
         m_connectedUI.BuildGridElements(m_options, 0);
         m_connectedUI.SetConnectionCode(m_networkCode);
     }
@@ -100,6 +101,7 @@ public class HostConnectedState : FlowStateBase
                 m_selecting = false;
                 m_lastHighlightSpot = -1.0f;
 
+                m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.FINAL_SELECTION, m_content = m_selectedIndex });
                 m_connectedUI.SetElementColour(m_selectedIndex, Color.green);
             }
             else if (m_timeSelecting - m_lastHighlightSpot > k_minTimeBeforeNewHighlight + Random.Range(0.0f, 0.3f))
