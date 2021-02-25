@@ -13,6 +13,7 @@ public class HostConnectedState : FlowStateBase
     private const float k_timeBeforeReveal = 2.0f;
     private const float k_minTimeBeforeNewHighlight = 0.15f;
 
+    private StateController m_childStates = new StateController();
     private ConnectedUI m_connectedUI = null;
     private HostConnection m_networkManager = null;
     private List<string> m_options = null;
@@ -45,6 +46,7 @@ public class HostConnectedState : FlowStateBase
 
     protected override void UpdateActiveState()
     {
+        m_childStates.UpdateStack();
         UpdateSelecting();
 
         object data = m_networkManager.UpdateConnection();
@@ -88,7 +90,7 @@ public class HostConnectedState : FlowStateBase
                     m_connectedUI.BuildGridElements(m_options, 0);
                     m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.EDIT_LIST, m_content = m_options });
                 });
-                ControllingStateStack.PushState(editState);
+                m_childStates.PushState(editState);
                 break;
 
             case "back":
