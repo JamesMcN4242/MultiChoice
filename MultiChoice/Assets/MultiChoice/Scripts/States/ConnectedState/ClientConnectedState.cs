@@ -67,11 +67,8 @@ public class ClientConnectedState : FlowStateBase
     {
         switch(message)
         {
-            case "select":
-                //m_selecting = true;
-                break;
-
             case "back":
+                m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.LEFT_LOBBY, m_content = null });
                 ControllingStateStack.PopState(this);
                 break;
         }

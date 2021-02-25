@@ -42,7 +42,16 @@ public class HostConnection : NetworkConnection
         {
             for (int i = 0; i < m_networkStreams.Count; i++)
             {
-                m_networkStreams[i].Write(bytes, 0, bytes.Length);
+                try
+                {
+                    m_networkStreams[i].Write(bytes, 0, bytes.Length);
+                }
+                catch
+                {
+                    //Aborted - most likely should have been closed and for some reason hasn't been
+                    RemoveClient(i);
+                    i--;
+                }
             }
         }
     }
@@ -57,20 +66,10 @@ public class HostConnection : NetworkConnection
                 m_currentClients = m_clients.Count;
             }
 
-            List<NetworkPacket> returnData = new List<NetworkPacket>(m_networkStreams.Count);
-
-            for (int i = 0; i < m_networkStreams.Count; i++)
+            List<NetworkPacket> messages = CollectAndProcessNetworkMessages();
+            if (messages.Count > 0)
             {
-                if (m_networkStreams[i].DataAvailable)
-                {
-                    int bytes = m_networkStreams[i].Read(m_receivedBuffer, 0, m_receivedBuffer.Length);
-                    returnData.Add(ConvertReceivedToNetworkPacket(bytes));
-                }
-            }
-
-            if (returnData.Count > 0)
-            {
-                return returnData;
+                return messages;
             }
         }
 
@@ -132,5 +131,48 @@ public class HostConnection : NetworkConnection
             // Stop listening for new clients.
             m_tcpServer?.Stop();
         }
+    }
+
+    private List<NetworkPacket> CollectAndProcessNetworkMessages()
+    {
+        List<NetworkPacket> messages = new List<NetworkPacket>(m_networkStreams.Count);
+
+        for (int i = 0; i < m_networkStreams.Count; i++)
+        {
+            if (m_networkStreams[i].DataAvailable)
+            {
+                int bytes = m_networkStreams[i].Read(m_receivedBuffer, 0, m_receivedBuffer.Length);
+                NetworkPacket packet = ConvertReceivedToNetworkPacket(bytes);
+                if (packet.m_messageType == MessageType.LEFT_LOBBY)
+                {
+                    RemoveClient(i);
+                    i--;
+                }
+                else
+                {
+                    messages.Add(packet);
+                }
+            }
+        }
+
+        return messages;
+    }
+
+    private void RemoveClient(int clientIndex)
+    {
+        try
+        {
+            m_networkStreams[clientIndex].Close();
+            m_clients[clientIndex].Close();
+        }
+        catch (Exception e)
+        {
+            LogWarning($"Exception when trying to close client and stream index {clientIndex}. Exception is: \n{e}");
+        }
+
+        m_networkStreams.RemoveAt(clientIndex);
+        m_clients.RemoveAt(clientIndex);
+
+        m_currentClients--;
     }
 }

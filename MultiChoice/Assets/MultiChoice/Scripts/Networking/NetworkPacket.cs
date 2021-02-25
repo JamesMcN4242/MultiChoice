@@ -7,7 +7,8 @@
 public enum MessageType : byte
 {
     CONTENT_OPTIONS,
-    SELECTION
+    SELECTION,
+    LEFT_LOBBY
 }
 
 [System.Serializable]
