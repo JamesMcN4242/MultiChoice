@@ -36,7 +36,7 @@ public class JoinState : FlowStateBase
             case "join":
                 string[] connectionCode = m_joinUI.GetCodeInput();
                 string ip = IPCodingSystem.GetIPFromCode(connectionCode);
-                NetworkManager networkManager = new NetworkManager(ip);
+                ClientConnection networkManager = new ClientConnection(ip);
 
                 ClientConnectedState connectedState = new ClientConnectedState(networkManager, connectionCode);
                 ControllingStateStack.PushState(connectedState);

@@ -20,12 +20,6 @@ public class ClientConnection : NetworkConnection
         Connect(ip);
     }
 
-    ~ClientConnection()
-    {
-        m_networkStream?.Close();
-        m_client?.Close();
-    }
-
     public override NetworkType GetNetworkType()
     {
         return NetworkType.CLIENT;
@@ -37,14 +31,8 @@ public class ClientConnection : NetworkConnection
         {
             if(m_networkStream.DataAvailable)
             {
-                byte[] data = new Byte[1024];
-                int bytes = m_networkStream.Read(data, 0, data.Length);
-
-                MemoryStream memStream = new MemoryStream();
-                BinaryFormatter binForm = new BinaryFormatter();
-                memStream.Write(data, 0, bytes);
-                memStream.Seek(0, SeekOrigin.Begin);
-                return (NetworkPacket)binForm.Deserialize(memStream);
+                int bytes = m_networkStream.Read(m_receivedBuffer, 0, m_receivedBuffer.Length);
+                return ConvertReceivedToNetworkPacket(bytes);                
             }
         }
 
@@ -53,12 +41,14 @@ public class ClientConnection : NetworkConnection
 
     public override void SendData(object data)
     {
-        BinaryFormatter bf = new BinaryFormatter();
-        MemoryStream memoryStream = new MemoryStream();
-        bf.Serialize(memoryStream, data);
-        byte[] bytes = memoryStream.ToArray();
-
+        byte[] bytes = ConvertToByteArray(data);
         m_networkStream.Write(bytes, 0, bytes.Length);
+    }
+
+    public override void ShutDown()
+    {
+        m_networkStream?.Close();
+        m_client?.Close();
     }
 
     private void Connect(string server)    

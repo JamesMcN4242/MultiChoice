@@ -13,7 +13,7 @@ public class ClientConnectedState : FlowStateBase
     private const float k_minTimeBeforeNewHighlight = 0.15f;
 
     private ConnectedUI m_connectedUI = null;
-    private NetworkManager m_networkManager = null;
+    private ClientConnection m_networkManager = null;
     private List<string> m_options = null;
     private string[] m_networkCode = null;
 
@@ -22,7 +22,7 @@ public class ClientConnectedState : FlowStateBase
     private float m_lastHighlightSpot = -1.0f;
     private int m_selectedIndex = 0;
 
-    public ClientConnectedState(NetworkManager networkManager, string[] code)
+    public ClientConnectedState(ClientConnection networkManager, string[] code)
     {
         m_networkManager = networkManager;
         m_networkCode = code;
@@ -41,7 +41,7 @@ public class ClientConnectedState : FlowStateBase
     protected override void UpdateActiveState()
     {
         UpdateSelecting();
-        object data = m_networkManager.UpdateNetwork();
+        object data = m_networkManager.UpdateConnection();
 
         if(!(data is bool))
         {
@@ -82,6 +82,11 @@ public class ClientConnectedState : FlowStateBase
         m_connectedUI = Object.FindObjectOfType<ConnectedUI>();
         m_ui = m_connectedUI;
         return m_ui != null;
+    }
+
+    protected override void StartDismissingState()
+    {
+        m_networkManager.ShutDown();
     }
 
     private void UpdateSelecting()

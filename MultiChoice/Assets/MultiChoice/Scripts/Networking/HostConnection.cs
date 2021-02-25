@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 
 using static UnityEngine.Debug;
 
@@ -16,6 +17,8 @@ public class HostConnection : NetworkConnection
     private readonly object k_listLock = new object();
     private List<TcpClient> m_clients = new List<TcpClient>(5);
     private List<NetworkStream> m_networkStreams = new List<NetworkStream>(5);
+    private TcpListener m_tcpServer = null;
+    private Thread m_backgroundThread = null;
 
     private int m_currentClients = 0;
 
@@ -26,15 +29,6 @@ public class HostConnection : NetworkConnection
         StartHosting();
     }
 
-    ~HostConnection()
-    {
-        for(int i = 0; i < m_clients.Count; i++)
-        {
-            m_networkStreams[i]?.Close();
-            m_clients[i]?.Close();
-        }
-    }
-
     public override NetworkType GetNetworkType()
     {
         return NetworkType.HOST;
@@ -42,10 +36,7 @@ public class HostConnection : NetworkConnection
 
     public override void SendData(object data)
     {
-        BinaryFormatter bf = new BinaryFormatter();
-        MemoryStream memoryStream = new MemoryStream();
-        bf.Serialize(memoryStream, data);
-        byte[] bytes = memoryStream.ToArray();
+        byte[] bytes = ConvertToByteArray(data);
 
         lock (k_listLock)
         {
@@ -66,15 +57,14 @@ public class HostConnection : NetworkConnection
                 m_currentClients = m_clients.Count;
             }
 
-            List<(int bytes, byte[] data)> returnData = new List<(int bytes, byte[] data)>(m_networkStreams.Count);
+            List<NetworkPacket> returnData = new List<NetworkPacket>(m_networkStreams.Count);
 
             for (int i = 0; i < m_networkStreams.Count; i++)
             {
                 if (m_networkStreams[i].DataAvailable)
                 {
-                    byte[] data = new byte[256];
-                    int bytes = m_networkStreams[i].Read(data, 0, data.Length);
-                    returnData.Add((bytes, data));
+                    int bytes = m_networkStreams[i].Read(m_receivedBuffer, 0, m_receivedBuffer.Length);
+                    returnData.Add(ConvertReceivedToNetworkPacket(bytes));
                 }
             }
 
@@ -87,26 +77,41 @@ public class HostConnection : NetworkConnection
         return false;
     }
 
+    public override void ShutDown()
+    {
+        for (int i = 0; i < m_clients.Count; i++)
+        {
+            m_networkStreams[i]?.Close();
+            m_clients[i]?.Close();
+        }
+
+        if (m_backgroundThread != null)
+        {
+            m_backgroundThread.Join(0);
+        }
+
+        m_tcpServer?.Stop();
+    }
+
     private void StartHosting()
     {
-        m_backgroundThread = new System.Threading.Thread(StartServer);
+        m_backgroundThread = new System.Threading.Thread(RunServer);
         m_backgroundThread.IsBackground = true;
         m_backgroundThread.Start();
     }
 
-    private void StartServer()
+    private void RunServer()
     {
-        TcpListener server = null;
         try
         {
-            server = new TcpListener(IPCodingSystem.GetLocalIPAddress(), k_serverPort);
-            server.Start();
+            m_tcpServer = new TcpListener(IPCodingSystem.GetLocalIPAddress(), k_serverPort);
+            m_tcpServer.Start();
 
             // Enter the listening loop.
             while (true)
             {
                 Log("Waiting for a connection... ");
-                TcpClient client = server.AcceptTcpClient();
+                TcpClient client = m_tcpServer.AcceptTcpClient();
 
                 Log("New client connected!");
                 NetworkStream stream = client.GetStream();
@@ -125,7 +130,7 @@ public class HostConnection : NetworkConnection
         finally
         {
             // Stop listening for new clients.
-            server.Stop();
+            m_tcpServer?.Stop();
         }
     }
 }

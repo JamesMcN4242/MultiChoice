@@ -14,7 +14,7 @@ public class HostConnectedState : FlowStateBase
     private const float k_minTimeBeforeNewHighlight = 0.15f;
 
     private ConnectedUI m_connectedUI = null;
-    private NetworkManager m_networkManager = null;
+    private HostConnection m_networkManager = null;
     private List<string> m_options = null;
     private string[] m_networkCode = null;
 
@@ -23,13 +23,13 @@ public class HostConnectedState : FlowStateBase
     private float m_lastHighlightSpot = -1.0f;
     private int m_selectedIndex = 0;
 
-    public HostConnectedState(NetworkManager networkManager, List<string> options, string[] code)
+    public HostConnectedState(HostConnection networkManager, List<string> options, string[] code)
     {
         m_networkManager = networkManager;
         m_options = options;
         m_networkCode = code;
 
-        m_networkManager.GetHostConnection.OnNewConnection = () => m_networkManager.SendMessage(new NetworkPacket() { m_messageType = MessageType.CONTENT_OPTIONS, m_content = m_options });
+        m_networkManager.OnNewConnection = () => m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.CONTENT_OPTIONS, m_content = m_options });
     }
 
     ~HostConnectedState()
@@ -47,7 +47,7 @@ public class HostConnectedState : FlowStateBase
     {
         UpdateSelecting();
 
-        object data = m_networkManager.UpdateNetwork();
+        object data = m_networkManager.UpdateConnection();
         if(!(data is bool))
         {
             Debug.Log("Received some form of message!");
@@ -65,7 +65,7 @@ public class HostConnectedState : FlowStateBase
         switch(message)
         {
             case "select":
-                m_networkManager.SendMessage(new NetworkPacket() { m_messageType = MessageType.SELECTION, m_content = null });
+                m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.SELECTION, m_content = null });
                 m_selecting = true;
                 break;
 
@@ -84,7 +84,8 @@ public class HostConnectedState : FlowStateBase
 
     protected override void StartDismissingState()
     {
-        m_networkManager.GetHostConnection.OnNewConnection = null;
+        m_networkManager.OnNewConnection = null;
+        m_networkManager.ShutDown();
     }
 
     private void UpdateSelecting()
