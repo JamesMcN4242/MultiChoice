@@ -15,6 +15,7 @@ public class JoinState : FlowStateBase
     {
         bool allFieldsFilled = m_joinUI.DoAllFieldsContainText();
         m_joinUI.SetStartButtonInteractive(allFieldsFilled);
+        m_joinUI.UpdateTextboxSelection();
     }
 
     protected override bool AquireUIFromScene()

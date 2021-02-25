@@ -31,6 +31,30 @@ public class JoinUI : UIStateBase
         m_startButton.interactable = interactive;
     }
 
+    public void UpdateTextboxSelection()
+    {
+        for(int i = 0; i < m_inputFields.Length; i++)
+        {
+            if (m_inputFields[i].isFocused)
+            {
+                string text = m_inputFields[i].text;
+                if (text.IsOnlyLower())
+                {
+                    m_inputFields[i].text = text.ToUpper();
+                }
+
+                if(text.Length == 2 && i < m_inputFields.Length - 1)
+                {
+                    m_inputFields[i+1].Select();
+                }
+                else
+                {
+                    m_inputFields[i].ReleaseSelection();
+                }
+            }
+        }
+    }
+
     public bool DoAllFieldsContainText()
     {
         foreach(TMP_InputField input in m_inputFields)
