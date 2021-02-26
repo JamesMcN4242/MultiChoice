@@ -16,6 +16,9 @@ public class JoinState : FlowStateBase
         bool allFieldsFilled = m_joinUI.DoAllFieldsContainText();
         m_joinUI.SetStartButtonInteractive(allFieldsFilled);
         m_joinUI.UpdateTextboxSelection();
+
+        bool anyTextPresent = allFieldsFilled || m_joinUI.AnyFieldContainsText();
+        m_joinUI.SetClearButtonInteractive(anyTextPresent);
     }
 
     protected override bool AquireUIFromScene()
@@ -40,6 +43,10 @@ public class JoinState : FlowStateBase
 
                 ClientConnectedState connectedState = new ClientConnectedState(networkManager, connectionCode);
                 ControllingStateStack.PushState(connectedState);
+                break;
+
+            case "clear":
+                m_joinUI.ClearAllInput();
                 break;
         }
     }

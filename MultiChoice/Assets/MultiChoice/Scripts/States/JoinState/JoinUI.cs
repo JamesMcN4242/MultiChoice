@@ -12,11 +12,13 @@ using UnityEngine.UI;
 public class JoinUI : UIStateBase
 {
     private Button m_startButton = null;
+    private Button m_clearInputButton = null;
     private TMP_InputField[] m_inputFields = null;
 
     protected override void OnAwake()
     {
         m_startButton = gameObject.GetComponentFromChild<Button>("Join");
+        m_clearInputButton = gameObject.GetComponentFromChild<Button>("ClearInput");
         Transform inputParent = gameObject.FindChildByName("TextInputs").transform;
         m_inputFields = new TMP_InputField[inputParent.childCount];
 
@@ -29,6 +31,10 @@ public class JoinUI : UIStateBase
     public void SetStartButtonInteractive(bool interactive)
     {
         m_startButton.interactable = interactive;
+    }
+    public void SetClearButtonInteractive(bool interactive)
+    {
+        m_clearInputButton.interactable = interactive;
     }
 
     public void UpdateTextboxSelection()
@@ -66,6 +72,19 @@ public class JoinUI : UIStateBase
         }
 
         return true;
+    }
+
+    public bool AnyFieldContainsText()
+    {
+        foreach (TMP_InputField input in m_inputFields)
+        {
+            if (input.text.Length > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public string[] GetCodeInput()
