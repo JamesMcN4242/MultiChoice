@@ -48,7 +48,7 @@ public class HostState : FlowStateBase
             case "start":
                 string[] code = IPCodingSystem.CalculateConnectionCode();
                 HostConnection hostConnection = new HostConnection();
-                HostConnectedState connectedState = new HostConnectedState(hostConnection, m_dataPresets[m_selectedPresetKey], code);
+                HostConnectedState connectedState = new HostConnectedState(hostConnection, m_dataPresets[m_selectedPresetKey], code, m_dataPresets);
                 ControllingStateStack.PushState(connectedState);
                 break;
 

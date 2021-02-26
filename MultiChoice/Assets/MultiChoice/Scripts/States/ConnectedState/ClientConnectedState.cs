@@ -11,6 +11,7 @@ public class ClientConnectedState : FlowStateBase
 {
     private const float k_minTimeBeforeNewHighlight = 0.15f;
 
+    private Dictionary<string, List<string>> m_dataPresets = null;
     private StateController m_childStates = new StateController();
     private ConnectedUI m_connectedUI = null;
     private ClientConnection m_networkManager = null;
@@ -88,6 +89,15 @@ public class ClientConnectedState : FlowStateBase
                     m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.EDIT_LIST, m_content = m_options });
                 });
                 m_childStates.PushState(editState);
+                break;
+
+            case "save":
+                if(m_dataPresets == null)
+                {
+                    m_dataPresets = PresetDataSystem.LoadAllPresets();
+                }
+                CreatePresetState createState = new CreatePresetState(m_dataPresets, true, "", string.Join(", ", m_options));
+                m_childStates.PushState(createState);
                 break;
 
             case "back":

@@ -13,6 +13,7 @@ public class HostConnectedState : FlowStateBase
     private const float k_timeBeforeReveal = 2.0f;
     private const float k_minTimeBeforeNewHighlight = 0.15f;
 
+    private Dictionary<string, List<string>> m_dataPresets = null;
     private StateController m_childStates = new StateController();
     private ConnectedUI m_connectedUI = null;
     private HostConnection m_networkManager = null;
@@ -24,11 +25,12 @@ public class HostConnectedState : FlowStateBase
     private float m_lastHighlightSpot = -1.0f;
     private int m_selectedIndex = 0;
 
-    public HostConnectedState(HostConnection networkManager, List<string> options, string[] code)
+    public HostConnectedState(HostConnection networkManager, List<string> options, string[] code, Dictionary<string, List<string>> dataPresets)
     {
         m_networkManager = networkManager;
         m_options = options;
         m_networkCode = code;
+        m_dataPresets = dataPresets;
 
         m_networkManager.OnNewConnection = () =>
         {
@@ -91,6 +93,11 @@ public class HostConnectedState : FlowStateBase
                     m_networkManager.SendData(new NetworkPacket() { m_messageType = MessageType.EDIT_LIST, m_content = m_options });
                 });
                 m_childStates.PushState(editState);
+                break;
+
+            case "save":
+                CreatePresetState createState = new CreatePresetState(m_dataPresets, true, "", string.Join(", ", m_options));
+                m_childStates.PushState(createState);
                 break;
 
             case "back":
