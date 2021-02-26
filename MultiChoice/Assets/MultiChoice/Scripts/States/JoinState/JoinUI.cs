@@ -38,7 +38,7 @@ public class JoinUI : UIStateBase
             if (m_inputFields[i].isFocused)
             {
                 string text = m_inputFields[i].text;
-                if (text.IsOnlyLower())
+                if (!text.IsOnlyUpper())
                 {
                     m_inputFields[i].text = text.ToUpper();
                 }
