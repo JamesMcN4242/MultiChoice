@@ -13,6 +13,8 @@ public class ClientConnection : NetworkConnection
     private TcpClient m_client = null;
     private NetworkStream m_networkStream = null;
 
+    public bool ConnectedSuccessfully => m_client != null && m_client.Connected;
+
     public ClientConnection(string ip)
     {
         Connect(ip);

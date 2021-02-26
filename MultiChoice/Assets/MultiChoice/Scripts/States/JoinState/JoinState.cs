@@ -41,8 +41,16 @@ public class JoinState : FlowStateBase
                 string ip = IPCodingSystem.GetIPFromCode(connectionCode);
                 ClientConnection networkManager = new ClientConnection(ip);
 
-                ClientConnectedState connectedState = new ClientConnectedState(networkManager, connectionCode);
-                ControllingStateStack.PushState(connectedState);
+                if (networkManager.ConnectedSuccessfully)
+                {
+                    ClientConnectedState connectedState = new ClientConnectedState(networkManager, connectionCode);
+                    ControllingStateStack.PushState(connectedState);
+                }
+                else
+                {
+                    GenericPopupState popup = new GenericPopupState("Failed to connect to the specified lobby");
+                    ControllingStateStack.PushState(popup);
+                }
                 break;
 
             case "clear":
