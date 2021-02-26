@@ -37,10 +37,7 @@ public static class IPCodingSystem
 
         for (int i = 0; i < code.Length; i++)
         {
-            string codeSegment = code[i];
-
-            int digit = (codeSegment[1] - 48);
-            digit += (codeSegment[0] - 65) * 10;
+            int digit = DecodeIPSegment(code[i]);
 
             ip += digit.ToString();
             if (i < code.Length - 1)
@@ -52,6 +49,11 @@ public static class IPCodingSystem
         return ip;
     }
     
+    public static int DecodeIPSegment(string codeSegment)
+    {
+        return (codeSegment[1] - 48) + (codeSegment[0] - 65) * 10;
+    }
+
     public static string GetLocalIPAddressAsString()
     {
         IPAddress iPAddress = GetLocalIPAddress();

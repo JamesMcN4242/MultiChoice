@@ -15,6 +15,8 @@ public class JoinUI : UIStateBase
     private Button m_clearInputButton = null;
     private TMP_InputField[] m_inputFields = null;
 
+    private bool m_textChanged = false;
+
     protected override void OnAwake()
     {
         m_startButton = gameObject.GetComponentFromChild<Button>("Join");
@@ -25,6 +27,7 @@ public class JoinUI : UIStateBase
         for(int i = 0; i < m_inputFields.Length; i++)
         {
             m_inputFields[i] = inputParent.GetChild(i).GetComponent<TMP_InputField>();
+            m_inputFields[i].onValueChanged.AddListener(UpdateTextboxSelection);
         }
     }
 
@@ -37,19 +40,20 @@ public class JoinUI : UIStateBase
         m_clearInputButton.interactable = interactive;
     }
 
-    public void UpdateTextboxSelection()
+    public void UpdateTextboxSelection(string input)
     {
+        m_textChanged = true;
+
         for(int i = 0; i < m_inputFields.Length; i++)
         {
             if (m_inputFields[i].isFocused)
             {
-                string text = m_inputFields[i].text;
-                if (!text.IsOnlyUpper())
+                if (!input.IsOnlyUpper())
                 {
-                    m_inputFields[i].text = text.ToUpper();
+                    m_inputFields[i].text = input.ToUpper();
                 }
 
-                if(text.Length == 2 && i < m_inputFields.Length - 1)
+                if(input.Length == 2 && i < m_inputFields.Length - 1)
                 {
                     m_inputFields[i+1].Select();
                 }
@@ -57,6 +61,8 @@ public class JoinUI : UIStateBase
                 {
                     m_inputFields[i].ReleaseSelection();
                 }
+
+                break;
             }
         }
     }
@@ -98,5 +104,21 @@ public class JoinUI : UIStateBase
         {
             input.text = string.Empty;
         }
+    }
+   
+    public bool ConsumeTextChange()
+    {
+        bool val = m_textChanged;
+        m_textChanged = false;
+        return val;
+    }
+
+    public void SetInputsColour(Color color, int inputIndex)
+    {
+        ColorBlock colorBlock = m_inputFields[inputIndex].colors;
+        if (colorBlock.normalColor == color) return;
+
+        colorBlock.normalColor = color;
+        m_inputFields[inputIndex].colors = colorBlock;
     }
 }

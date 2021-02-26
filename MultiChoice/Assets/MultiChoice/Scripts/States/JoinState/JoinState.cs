@@ -13,12 +13,26 @@ public class JoinState : FlowStateBase
 
     protected override void UpdateActiveState()
     {
-        bool allFieldsFilled = m_joinUI.DoAllFieldsContainText();
-        m_joinUI.SetStartButtonInteractive(allFieldsFilled);
-        m_joinUI.UpdateTextboxSelection();
+        if (m_joinUI.ConsumeTextChange())
+        {
+            bool allFieldsFilled = m_joinUI.DoAllFieldsContainText();
+            m_joinUI.SetStartButtonInteractive(allFieldsFilled);
 
-        bool anyTextPresent = allFieldsFilled || m_joinUI.AnyFieldContainsText();
-        m_joinUI.SetClearButtonInteractive(anyTextPresent);
+            bool anyTextPresent = allFieldsFilled || m_joinUI.AnyFieldContainsText();
+            m_joinUI.SetClearButtonInteractive(anyTextPresent);
+
+            string[] codeSections = m_joinUI.GetCodeInput();
+            for(int i = 0; i < codeSections.Length; i++)
+            {
+                Color toAssign = Color.white;
+                if(codeSections[i].Length == 2)
+                {
+                    int digitValue = IPCodingSystem.DecodeIPSegment(codeSections[i]);
+                    toAssign = digitValue >= 0 && digitValue <= 255 ? Color.white : Color.red;
+                }
+                m_joinUI.SetInputsColour(toAssign, i);
+            }
+        }
     }
 
     protected override bool AquireUIFromScene()
